@@ -5,17 +5,15 @@ import { Header } from "../components/Header";
 import { Video } from "../components/Video";
 import { Module } from "../components/Module";
 
-import { useAppDispatch, useAppSelector } from "../store";
-import { loadCourse, useCurrentLesson } from "../store/slices/player";
 import { ModuleSkeleton } from "../components/ModuleSkeleton";
-
-const fakeModules = new Array(2).fill(0).map((_, i) => i + 1);
+import { useStore, useCurrentLesson } from "../zustand-store";
 
 export function Player() {
-  const dispatch = useAppDispatch();
-  const modules = useAppSelector((state) => state.player.course?.modules);
-  const isCourseLoading = useAppSelector((state) => state.player.loading);
-
+  const { load, course, isLoading } = useStore((store) => ({
+    load: store.load,
+    course: store.course,
+    isLoading: store.isLoading,
+  }));
   const { currentLesson } = useCurrentLesson();
 
   useEffect(() => {
@@ -25,8 +23,8 @@ export function Player() {
   }, [currentLesson?.title]);
 
   useEffect(() => {
-    dispatch(loadCourse());
-  }, [dispatch]);
+    load();
+  }, []);
 
   return (
     <div className="h-screen bg-zinc-950 text-zinc-50 flex justify-center items-center">
@@ -46,17 +44,19 @@ export function Player() {
           </div>
 
           <aside className="w-80 absolute top-0 bottom-0 right-0 divide-y-2 divide-zinc-900 border-l border-zinc-800 bg-zinc-900 overflow-y-auto scrollbar-thin scrollbar-track-zinc-950 scrollbar-thumb-zinc-800">
-            {isCourseLoading
-              ? fakeModules.map((key) => <ModuleSkeleton key={key} />)
-              : modules?.length &&
-                modules.map((module, index) => (
-                  <Module
-                    key={module.id}
-                    moduleIndex={index}
-                    title={module.title}
-                    lessonsAmount={module.lessons.length}
-                  />
-                ))}
+            {isLoading ? (
+              <ModuleSkeleton />
+            ) : (
+              course?.modules &&
+              course?.modules.map((module, index) => (
+                <Module
+                  key={module.id}
+                  moduleIndex={index}
+                  title={module.title}
+                  lessonsAmount={module.lessons.length}
+                />
+              ))
+            )}
           </aside>
         </main>
       </div>
